@@ -1,12 +1,12 @@
 /**
  * Thor Endless Runner V2
- * Features: Slower speed, Platforms, New Enemy Art.
+ * Features: Slower speed, Platforms, New Enemy Art, Win Condition.
  */
 
 // Game Constants
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 450;
-const GAME_SPEED = 4.5; // Reduced by 50% (was 9)
+const GAME_SPEED = 4.5; // Reduced by 50%
 
 // Assets
 const thorImage = new Image();
@@ -14,6 +14,9 @@ thorImage.src = 'assets/thor.png';
 
 const enemyImage = new Image();
 enemyImage.src = 'assets/enemy.png';
+
+const lokiImage = new Image();
+lokiImage.src = 'assets/loki.png'; // Will show empty/broken if missing, but won't stop game
 
 // --- CLASSES ---
 
@@ -60,12 +63,12 @@ class Thor {
     constructor(gameWidth, gameHeight) {
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
-        this.width = 96; // Increased by 50% (was 64)
+        this.width = 96;
         this.height = 96;
         this.x = 100;
         this.y = this.gameHeight - this.height - 50;
         this.vy = 0;
-        this.weight = 0.8; // Reduced gravity slightly to match slower speed feel
+        this.weight = 0.8;
         this.jumpPower = -17;
         this.onGround = true;
         this.isAttacking = false;
@@ -78,7 +81,7 @@ class Thor {
             context.save();
             context.fillStyle = 'rgba(255, 215, 0, 0.4)';
             context.beginPath();
-            context.arc(this.x + this.width / 2 + 10, this.y + this.height / 2, 65, 0, Math.PI * 2); // Larger aura
+            context.arc(this.x + this.width / 2 + 10, this.y + this.height / 2, 65, 0, Math.PI * 2);
             context.fill();
             context.restore();
         }
@@ -97,7 +100,7 @@ class Thor {
         // Attack
         if (input.keys.attack && !this.isAttacking) {
             this.isAttacking = true;
-            this.attackTimer = 20; // Slightly longer attack window for easier gameplay
+            this.attackTimer = 20;
             this.color = 'yellow';
         }
 
@@ -125,19 +128,17 @@ class Thor {
         }
 
         // Platform Collisions
-        // Only check for landing if we are falling (vy > 0)
-        this.onGround = false; // Default false, verify below
+        this.onGround = false;
 
         if (this.y >= groundLevel) {
             this.y = groundLevel;
             this.onGround = true;
         } else {
-            // Check platforms
             platforms.forEach(platform => {
                 if (this.vy >= 0 &&
-                    this.y + this.height <= platform.y + platform.height && // Was above/at platform level
-                    this.y + this.height + this.vy >= platform.y && // Is crossing top edge
-                    this.x + this.width > platform.x && // Horizontals
+                    this.y + this.height <= platform.y + platform.height &&
+                    this.y + this.height + this.vy >= platform.y &&
+                    this.x + this.width > platform.x &&
                     this.x < platform.x + platform.width) {
                     this.y = platform.y - this.height;
                     this.vy = 0;
@@ -152,7 +153,7 @@ class Enemy {
     constructor(gameWidth, gameHeight) {
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
-        this.width = 120; // Doubled (was 60)
+        this.width = 120;
         this.height = 120;
         this.x = this.gameWidth;
         this.y = this.gameHeight - this.height - 50;
@@ -164,7 +165,6 @@ class Enemy {
         if (enemyImage.complete && enemyImage.naturalWidth > 0) {
             context.drawImage(enemyImage, this.x, this.y, this.width, this.height);
         } else {
-            // Fallback
             context.fillStyle = 'purple';
             context.fillRect(this.x, this.y, this.width, this.height);
         }
@@ -189,10 +189,8 @@ class Platform {
     }
 
     draw(context) {
-        context.fillStyle = '#5D4037'; // Dark wood/rock color
+        context.fillStyle = '#5D4037';
         context.fillRect(this.x, this.y, this.width, this.height);
-
-        // Top highlight
         context.fillStyle = '#8D6E63';
         context.fillRect(this.x, this.y, this.width, 5);
     }
@@ -202,20 +200,6 @@ class Platform {
         if (this.x < 0 - this.width) this.markedForDeletion = true;
     }
 }
-
-// Assets
-const thorImage = new Image();
-thorImage.src = 'assets/thor.png';
-
-const enemyImage = new Image();
-enemyImage.src = 'assets/enemy.png';
-
-const lokiImage = new Image();
-lokiImage.src = 'assets/loki.png'; // User needs to provide this
-
-// ... (InputHandler, Thor, Enemy classes remain unchanged) ...
-
-// ... (Platform class remains unchanged) ...
 
 class Coin {
     constructor(gameWidth, gameHeight, y) {
@@ -251,54 +235,109 @@ class Coin {
     }
 }
 
-// ... (LevelManager remains unchanged) ...
+class LevelManager {
+    constructor(gameWidth, gameHeight) {
+        this.gameWidth = gameWidth;
+        this.gameHeight = gameHeight;
+        this.enemies = [];
+        this.coins = [];
+        this.platforms = [];
+        this.timer = 0;
+        this.interval = 1500;
+        this.randomInterval = Math.random() * 1000 + 500;
+    }
+
+    update(deltaTime) {
+        if (this.timer > this.interval + this.randomInterval) {
+            this.spawnPattern();
+            this.timer = 0;
+            this.randomInterval = Math.random() * 1000 + 500;
+        } else {
+            this.timer += deltaTime;
+        }
+
+        this.enemies.forEach(e => e.update());
+        this.coins.forEach(c => c.update());
+        this.platforms.forEach(p => p.update());
+
+        this.enemies = this.enemies.filter(e => !e.markedForDeletion);
+        this.coins = this.coins.filter(c => !c.markedForDeletion);
+        this.platforms = this.platforms.filter(p => !p.markedForDeletion);
+    }
+
+    draw(context) {
+        this.platforms.forEach(p => p.draw(context));
+        this.enemies.forEach(e => e.draw(context));
+        this.coins.forEach(c => c.draw(context));
+    }
+
+    spawnPattern() {
+        const rand = Math.random();
+
+        if (rand < 0.3) {
+            this.enemies.push(new Enemy(this.gameWidth, this.gameHeight));
+        } else if (rand < 0.6) {
+            const pWidth = 150;
+            const pHeight = this.gameHeight - 150;
+            const platform = new Platform(this.gameWidth, this.gameHeight, this.gameWidth, pHeight, pWidth);
+            this.platforms.push(platform);
+            this.coins.push(new Coin(this.gameWidth, this.gameHeight, pHeight - 50));
+            if (Math.random() > 0.5) this.coins.push(new Coin(this.gameWidth + 50, this.gameHeight, this.gameHeight - 100));
+        } else if (rand < 0.8) {
+            const enemy = new Enemy(this.gameWidth, this.gameHeight);
+            enemy.x += 100;
+            this.enemies.push(enemy);
+            const pWidth = 120;
+            const pHeight = this.gameHeight - 200;
+            this.platforms.push(new Platform(this.gameWidth, this.gameHeight, this.gameWidth, pHeight, pWidth));
+            this.coins.push(new Coin(this.gameWidth + 30, this.gameHeight, pHeight - 40));
+        } else {
+            this.coins.push(new Coin(this.gameWidth, this.gameHeight, this.gameHeight - 120));
+            this.coins.push(new Coin(this.gameWidth + 50, this.gameHeight, this.gameHeight - 170));
+            this.coins.push(new Coin(this.gameWidth + 100, this.gameHeight, this.gameHeight - 120));
+        }
+    }
+
+    reset() {
+        this.enemies = [];
+        this.coins = [];
+        this.platforms = [];
+        this.timer = 0;
+    }
+}
 
 // --- INIT ---
 
-let input;
-let player;
-let levelManager;
+// Setup immediately since script is at end of body
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = GAME_WIDTH;
+canvas.height = GAME_HEIGHT;
+
+const scoreElement = document.getElementById('score');
+const finalScoreElement = document.getElementById('final-score');
+const startScreen = document.getElementById('start-screen');
+const gameOverScreen = document.getElementById('game-over-screen');
+const startBtn = document.getElementById('start-btn');
+const restartBtn = document.getElementById('restart-btn');
+const gameOverTitle = document.querySelector('#game-over-screen h1');
+
+const input = new InputHandler();
+const player = new Thor(GAME_WIDTH, GAME_HEIGHT);
+const levelManager = new LevelManager(GAME_WIDTH, GAME_HEIGHT);
+
 let gameRunning = false;
 let score = 0;
 let frameCount = 0;
 let lastTime = 0;
 let gameWon = false;
 
-// DOM Elements
-let canvas, ctx;
-let scoreElement, finalScoreElement, startScreen, gameOverScreen, startBtn, restartBtn, gameOverTitle;
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialize Canvas
-    canvas = document.getElementById('gameCanvas');
-    ctx = canvas.getContext('2d');
-    canvas.width = GAME_WIDTH;
-    canvas.height = GAME_HEIGHT;
-
-    // Initialize UI Elements
-    scoreElement = document.getElementById('score');
-    finalScoreElement = document.getElementById('final-score');
-    startScreen = document.getElementById('start-screen');
-    gameOverScreen = document.getElementById('game-over-screen');
-    startBtn = document.getElementById('start-btn');
-    restartBtn = document.getElementById('restart-btn');
-    gameOverTitle = document.querySelector('#game-over-screen h1');
-
-    // Initialize Game Classes
-    input = new InputHandler();
-    player = new Thor(GAME_WIDTH, GAME_HEIGHT);
-    levelManager = new LevelManager(GAME_WIDTH, GAME_HEIGHT);
-
-    // Add Listeners
-    if (startBtn) startBtn.addEventListener('click', startGame);
-    if (restartBtn) restartBtn.addEventListener('click', startGame);
-
-    // Initial Draw
-    draw();
-});
+// Event Listeners
+if (startBtn) startBtn.addEventListener('click', startGame);
+if (restartBtn) restartBtn.addEventListener('click', startGame);
 
 function startGame() {
-    console.log("Starting Game..."); // Debug
+    console.log("Starting Game...");
     if (gameRunning) return;
 
     gameRunning = true;
@@ -323,7 +362,6 @@ function startGame() {
         gameOverScreen.classList.remove('active');
     }
 
-    // Reset Title
     if (gameOverTitle) gameOverTitle.innerText = "FIN DEL JUEGO";
 
     lastTime = performance.now();
@@ -364,7 +402,6 @@ function winGame() {
 }
 
 function checkCollisions() {
-    // Enemy Collisions
     levelManager.enemies.forEach(enemy => {
         const dx = (enemy.x + enemy.width / 2) - (player.x + player.width / 2);
         const dy = (enemy.y + enemy.height / 2) - (player.y + player.height / 2);
@@ -381,7 +418,6 @@ function checkCollisions() {
         }
     });
 
-    // Coin Collisions
     levelManager.coins.forEach(coin => {
         const dx = (coin.x + coin.width / 2) - (player.x + player.width / 2);
         const dy = (coin.y + coin.height / 2) - (player.y + player.height / 2);
@@ -403,22 +439,17 @@ function update(deltaTime) {
     levelManager.update(deltaTime);
     checkCollisions();
 
-    // Survival points
     if (frameCount % 60 === 0) {
         score++;
         scoreElement.innerText = score;
     }
 
-    // Check Win Condition
     if (score >= 300) {
         winGame();
     }
 }
 
 function draw() {
-    // If context not ready, skip
-    if (!ctx) return;
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Sky
@@ -462,3 +493,6 @@ function animate(currentTime) {
 
     requestAnimationFrame(animate);
 }
+
+// Initial Draw
+draw();
