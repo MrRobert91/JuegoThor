@@ -268,7 +268,7 @@ let gameWon = false;
 let canvas, ctx;
 let scoreElement, finalScoreElement, startScreen, gameOverScreen, startBtn, restartBtn, gameOverTitle;
 
-window.addEventListener('load', () => {
+document.addEventListener('DOMContentLoaded', () => {
     // Initialize Canvas
     canvas = document.getElementById('gameCanvas');
     ctx = canvas.getContext('2d');
