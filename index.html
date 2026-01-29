@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thor Endless Runner</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- UI Overlay -->
+        <div id="ui-layer">
+            <div id="score-board">Puntos: <span id="score">0</span></div>
+            
+            <div id="start-screen" class="screen active">
+                <h1>THOR RUNNER</h1>
+                <p>Presiona ESPACIO o toca para saltar</p>
+                <p>Presiona Z o clic para atacar</p>
+                <button id="start-btn">JUGAR</button>
+            </div>
+
+            <div id="game-over-screen" class="screen hidden">
+                <h1>FIN DEL JUEGO</h1>
+                <p>Puntuación Final: <span id="final-score">0</span></p>
+                <button id="restart-btn">REINTENTAR</button>
+            </div>
+            
+            <!-- Mobile Controls (Visible only on small screens via CSS media queries if needed, or always visible) -->
+            <div id="mobile-controls">
+                <button id="jump-btn">SALTAR</button>
+                <button id="attack-btn">ATACAR</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
