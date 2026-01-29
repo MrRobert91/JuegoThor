@@ -67,8 +67,8 @@ class Thor {
     constructor(gameWidth, gameHeight) {
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
-        this.width = 64;
-        this.height = 64;
+        this.width = 96; // Increased by 50% (was 64)
+        this.height = 96;
         this.x = 100;
         this.y = this.gameHeight - this.height - 50;
         this.vy = 0;
@@ -85,7 +85,7 @@ class Thor {
             context.save();
             context.fillStyle = 'rgba(255, 215, 0, 0.4)';
             context.beginPath();
-            context.arc(this.x + this.width / 2 + 10, this.y + this.height / 2, 50, 0, Math.PI * 2);
+            context.arc(this.x + this.width / 2 + 10, this.y + this.height / 2, 65, 0, Math.PI * 2); // Larger aura
             context.fill();
             context.restore();
         }
@@ -159,8 +159,8 @@ class Enemy {
     constructor(gameWidth, gameHeight) {
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
-        this.width = 60;
-        this.height = 60;
+        this.width = 120; // Doubled (was 60)
+        this.height = 120;
         this.x = this.gameWidth;
         this.y = this.gameHeight - this.height - 50;
         this.speed = GAME_SPEED;
