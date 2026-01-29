@@ -3,17 +3,10 @@
  * Features: Slower speed, Platforms, New Enemy Art.
  */
 
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-
 // Game Constants
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 450;
 const GAME_SPEED = 4.5; // Reduced by 50% (was 9)
-
-// Set canvas resolution
-canvas.width = GAME_WIDTH;
-canvas.height = GAME_HEIGHT;
 
 // Assets
 const thorImage = new Image();
@@ -262,35 +255,57 @@ class Coin {
 
 // --- INIT ---
 
-const input = new InputHandler();
-const player = new Thor(GAME_WIDTH, GAME_HEIGHT);
-const levelManager = new LevelManager(GAME_WIDTH, GAME_HEIGHT);
-
+let input;
+let player;
+let levelManager;
 let gameRunning = false;
 let score = 0;
 let frameCount = 0;
 let lastTime = 0;
 let gameWon = false;
 
-const scoreElement = document.getElementById('score');
-const finalScoreElement = document.getElementById('final-score');
-const startScreen = document.getElementById('start-screen');
-const gameOverScreen = document.getElementById('game-over-screen');
-const startBtn = document.getElementById('start-btn');
-const restartBtn = document.getElementById('restart-btn');
-const gameOverTitle = document.querySelector('#game-over-screen h1');
+// DOM Elements
+let canvas, ctx;
+let scoreElement, finalScoreElement, startScreen, gameOverScreen, startBtn, restartBtn, gameOverTitle;
 
-startBtn.addEventListener('click', startGame);
-restartBtn.addEventListener('click', startGame);
+window.addEventListener('load', () => {
+    // Initialize Canvas
+    canvas = document.getElementById('gameCanvas');
+    ctx = canvas.getContext('2d');
+    canvas.width = GAME_WIDTH;
+    canvas.height = GAME_HEIGHT;
+
+    // Initialize UI Elements
+    scoreElement = document.getElementById('score');
+    finalScoreElement = document.getElementById('final-score');
+    startScreen = document.getElementById('start-screen');
+    gameOverScreen = document.getElementById('game-over-screen');
+    startBtn = document.getElementById('start-btn');
+    restartBtn = document.getElementById('restart-btn');
+    gameOverTitle = document.querySelector('#game-over-screen h1');
+
+    // Initialize Game Classes
+    input = new InputHandler();
+    player = new Thor(GAME_WIDTH, GAME_HEIGHT);
+    levelManager = new LevelManager(GAME_WIDTH, GAME_HEIGHT);
+
+    // Add Listeners
+    if (startBtn) startBtn.addEventListener('click', startGame);
+    if (restartBtn) restartBtn.addEventListener('click', startGame);
+
+    // Initial Draw
+    draw();
+});
 
 function startGame() {
+    console.log("Starting Game..."); // Debug
     if (gameRunning) return;
 
     gameRunning = true;
     gameWon = false;
     score = 0;
     frameCount = 0;
-    scoreElement.innerText = score;
+    if (scoreElement) scoreElement.innerText = score;
 
     player.y = GAME_HEIGHT - player.height - 50;
     player.vy = 0;
@@ -299,13 +314,17 @@ function startGame() {
 
     levelManager.reset();
 
-    startScreen.classList.add('hidden');
-    startScreen.classList.remove('active');
-    gameOverScreen.classList.add('hidden');
-    gameOverScreen.classList.remove('active');
+    if (startScreen) {
+        startScreen.classList.add('hidden');
+        startScreen.classList.remove('active');
+    }
+    if (gameOverScreen) {
+        gameOverScreen.classList.add('hidden');
+        gameOverScreen.classList.remove('active');
+    }
 
-    // Reset Title just in case
-    gameOverTitle.innerText = "FIN DEL JUEGO";
+    // Reset Title
+    if (gameOverTitle) gameOverTitle.innerText = "FIN DEL JUEGO";
 
     lastTime = performance.now();
     requestAnimationFrame(animate);
@@ -313,23 +332,23 @@ function startGame() {
 
 function gameOver() {
     gameRunning = false;
-    finalScoreElement.innerText = score;
-    gameOverTitle.innerText = "FIN DEL JUEGO";
-    gameOverScreen.classList.remove('hidden');
-    gameOverScreen.classList.add('active');
+    if (finalScoreElement) finalScoreElement.innerText = score;
+    if (gameOverTitle) gameOverTitle.innerText = "FIN DEL JUEGO";
+    if (gameOverScreen) {
+        gameOverScreen.classList.remove('hidden');
+        gameOverScreen.classList.add('active');
+    }
 }
 
 function winGame() {
     gameRunning = false;
     gameWon = true;
 
-    // Custom Loki Message
-    finalScoreElement.innerText = score;
-    gameOverTitle.innerText = "¡Te pillé Loki, devuélveme mis cabras!";
+    if (finalScoreElement) finalScoreElement.innerText = score;
+    if (gameOverTitle) gameOverTitle.innerText = "¡Te pillé Loki, devuélveme mis cabras!";
 
-    // If we haven't added the image to the screen yet, add it
     let lokiImg = document.getElementById('loki-win-img');
-    if (!lokiImg) {
+    if (!lokiImg && gameOverScreen) {
         lokiImg = document.createElement('img');
         lokiImg.id = 'loki-win-img';
         lokiImg.src = 'assets/loki.png';
@@ -338,8 +357,10 @@ function winGame() {
         gameOverScreen.insertBefore(lokiImg, restartBtn);
     }
 
-    gameOverScreen.classList.remove('hidden');
-    gameOverScreen.classList.add('active');
+    if (gameOverScreen) {
+        gameOverScreen.classList.remove('hidden');
+        gameOverScreen.classList.add('active');
+    }
 }
 
 function checkCollisions() {
@@ -368,7 +389,7 @@ function checkCollisions() {
 
         if (distance < coin.width / 2 + player.width / 2) {
             coin.markedForDeletion = true;
-            score += 5; // Updated to 5 points
+            score += 5;
             scoreElement.innerText = score;
         }
     });
@@ -395,6 +416,9 @@ function update(deltaTime) {
 }
 
 function draw() {
+    // If context not ready, skip
+    if (!ctx) return;
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Sky
@@ -438,5 +462,3 @@ function animate(currentTime) {
 
     requestAnimationFrame(animate);
 }
-
-draw();
