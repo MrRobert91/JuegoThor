@@ -1,12 +1,14 @@
 /**
- * Thor Endless Runner V2
- * Features: Slower speed, Platforms, New Enemy Art, Win Condition.
+ * Thor Endless Runner V3
+ * Features: Slower speed, Platforms, New Enemy Art, Win Condition, Birds, Speed Scaling.
  */
 
 // Game Constants
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 450;
-const GAME_SPEED = 4.5; // Reduced by 50%
+const INITIAL_GAME_SPEED = 4.5;
+
+let gameSpeed = INITIAL_GAME_SPEED;
 
 // Assets
 const thorImage = new Image();
@@ -16,7 +18,13 @@ const enemyImage = new Image();
 enemyImage.src = 'assets/enemy.png';
 
 const lokiImage = new Image();
-lokiImage.src = 'assets/loki.png'; // Will show empty/broken if missing, but won't stop game
+lokiImage.src = 'assets/loki.png';
+
+const birdBlueImage = new Image();
+birdBlueImage.src = 'assets/bird_blue.png';
+
+const birdWhiteImage = new Image();
+birdWhiteImage.src = 'assets/bird_white.png';
 
 // --- CLASSES ---
 
@@ -157,7 +165,6 @@ class Enemy {
         this.height = 120;
         this.x = this.gameWidth;
         this.y = this.gameHeight - this.height - 50;
-        this.speed = GAME_SPEED;
         this.markedForDeletion = false;
     }
 
@@ -171,7 +178,7 @@ class Enemy {
     }
 
     update() {
-        this.x -= this.speed;
+        this.x -= gameSpeed; // Use global variable directly
         if (this.x < 0 - this.width) this.markedForDeletion = true;
     }
 }
@@ -184,7 +191,6 @@ class Platform {
         this.y = y;
         this.width = width;
         this.height = 20;
-        this.speed = GAME_SPEED;
         this.markedForDeletion = false;
     }
 
@@ -196,7 +202,7 @@ class Platform {
     }
 
     update() {
-        this.x -= this.speed;
+        this.x -= gameSpeed;
         if (this.x < 0 - this.width) this.markedForDeletion = true;
     }
 }
@@ -209,7 +215,6 @@ class Coin {
         this.height = 30;
         this.x = this.gameWidth;
         this.y = y;
-        this.speed = GAME_SPEED;
         this.markedForDeletion = false;
     }
 
@@ -230,8 +235,51 @@ class Coin {
     }
 
     update() {
-        this.x -= this.speed;
+        this.x -= gameSpeed;
         if (this.x < 0 - this.width) this.markedForDeletion = true;
+    }
+}
+
+class Bird {
+    constructor(gameWidth, gameHeight, direction) {
+        this.gameWidth = gameWidth;
+        this.gameHeight = gameHeight;
+        this.width = 50;
+        this.height = 50;
+        this.direction = direction; // 'right' (blue) or 'left' (white)
+        this.y = Math.random() * (this.gameHeight - 200); // Random height in sky
+        this.flySpeed = Math.random() * 2 + 3; // Independent fly speed
+        this.markedForDeletion = false;
+
+        if (this.direction === 'right') {
+            this.x = 0 - this.width;
+            this.image = birdBlueImage;
+        } else {
+            this.x = this.gameWidth;
+            this.image = birdWhiteImage;
+        }
+    }
+
+    draw(context) {
+        if (this.image.complete && this.image.naturalWidth > 0) {
+            context.drawImage(this.image, this.x, this.y, this.width, this.height);
+        } else {
+            // Fallback
+            context.fillStyle = (this.direction === 'right') ? 'blue' : 'white';
+            context.beginPath();
+            context.arc(this.x + this.width / 2, this.y + this.height / 2, 20, 0, Math.PI * 2);
+            context.fill();
+        }
+    }
+
+    update() {
+        if (this.direction === 'right') {
+            this.x += this.flySpeed;
+            if (this.x > this.gameWidth) this.markedForDeletion = true;
+        } else {
+            this.x -= (this.flySpeed + gameSpeed * 0.5); // Move left faster (relative to train/ground speed illusion)
+            if (this.x < 0 - this.width) this.markedForDeletion = true;
+        }
     }
 }
 
@@ -242,30 +290,51 @@ class LevelManager {
         this.enemies = [];
         this.coins = [];
         this.platforms = [];
+        this.birds = [];
         this.timer = 0;
+        this.birdTimer = 0;
         this.interval = 1500;
         this.randomInterval = Math.random() * 1000 + 500;
+        this.birdInterval = 4000;
     }
 
     update(deltaTime) {
+        // Spawn Enemies/Platforms
         if (this.timer > this.interval + this.randomInterval) {
             this.spawnPattern();
             this.timer = 0;
             this.randomInterval = Math.random() * 1000 + 500;
+            // Adjust interval slightly based on gameSpeed to keep density consistent
+            // As speed increases, spawn faster? Or same distance?
+            // Current time based means effectively sparser as speed increases. 
+            // Let's keep it time based for now to increase difficulty via speed.
         } else {
             this.timer += deltaTime;
+        }
+
+        // Spawn Birds
+        if (this.birdTimer > this.birdInterval) {
+            const dir = Math.random() < 0.5 ? 'right' : 'left';
+            this.birds.push(new Bird(this.gameWidth, this.gameHeight, dir));
+            this.birdTimer = 0;
+            this.birdInterval = Math.random() * 5000 + 3000;
+        } else {
+            this.birdTimer += deltaTime;
         }
 
         this.enemies.forEach(e => e.update());
         this.coins.forEach(c => c.update());
         this.platforms.forEach(p => p.update());
+        this.birds.forEach(b => b.update());
 
         this.enemies = this.enemies.filter(e => !e.markedForDeletion);
         this.coins = this.coins.filter(c => !c.markedForDeletion);
         this.platforms = this.platforms.filter(p => !p.markedForDeletion);
+        this.birds = this.birds.filter(b => !b.markedForDeletion);
     }
 
     draw(context) {
+        this.birds.forEach(b => b.draw(context)); // Birds in background (behind potential foreground?) or sky
         this.platforms.forEach(p => p.draw(context));
         this.enemies.forEach(e => e.draw(context));
         this.coins.forEach(c => c.draw(context));
@@ -302,7 +371,9 @@ class LevelManager {
         this.enemies = [];
         this.coins = [];
         this.platforms = [];
+        this.birds = [];
         this.timer = 0;
+        this.birdTimer = 0;
     }
 }
 
@@ -331,6 +402,7 @@ let score = 0;
 let frameCount = 0;
 let lastTime = 0;
 let gameWon = false;
+let nextSpeedThreshold = 100;
 
 // Event Listeners
 if (startBtn) startBtn.addEventListener('click', startGame);
@@ -344,6 +416,8 @@ function startGame() {
     gameWon = false;
     score = 0;
     frameCount = 0;
+    gameSpeed = INITIAL_GAME_SPEED;
+    nextSpeedThreshold = 100;
     if (scoreElement) scoreElement.innerText = score;
 
     player.y = GAME_HEIGHT - player.height - 50;
@@ -444,7 +518,14 @@ function update(deltaTime) {
         scoreElement.innerText = score;
     }
 
-    if (score >= 300) {
+    // Speed Scaling
+    if (score >= nextSpeedThreshold) {
+        gameSpeed = gameSpeed * 1.1; // Increase by 10%
+        nextSpeedThreshold += 100;
+        console.log("Speed Up! New Speed:", gameSpeed);
+    }
+
+    if (score >= 300 && !gameWon) {
         winGame();
     }
 }
@@ -472,7 +553,7 @@ function draw() {
     ctx.strokeStyle = '#558B2F';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    let offset = (frameCount * GAME_SPEED) % 100;
+    let offset = (frameCount * gameSpeed) % 100;
     for (let i = 0; i < GAME_WIDTH + 100; i += 100) {
         ctx.moveTo(i - offset, GAME_HEIGHT - 40);
         ctx.lineTo(i - offset - 30, GAME_HEIGHT);
