@@ -26,6 +26,9 @@ birdBlueImage.src = 'assets/bird_blue.png';
 const birdWhiteImage = new Image();
 birdWhiteImage.src = 'assets/bird_white.png';
 
+const lokiCabrasImage = new Image();
+lokiCabrasImage.src = 'assets/loki_cabras.png';
+
 // --- CLASSES ---
 
 class InputHandler {
@@ -283,6 +286,46 @@ class Bird {
     }
 }
 
+class Loki {
+    constructor(gameWidth, gameHeight) {
+        this.gameWidth = gameWidth;
+        this.gameHeight = gameHeight;
+        this.width = 120;
+        this.height = 120;
+        this.baseX = this.gameWidth - 250;
+        this.x = this.baseX;
+        this.y = this.gameHeight - this.height - 50;
+        this.isStopped = false;
+        this.timer = 0;
+    }
+
+    draw(context) {
+        if (lokiCabrasImage.complete && lokiCabrasImage.naturalWidth > 0) {
+            context.drawImage(lokiCabrasImage, this.x, this.y, this.width, this.height);
+        } else {
+            context.fillStyle = 'green';
+            context.fillRect(this.x, this.y, this.width, this.height);
+        }
+    }
+
+    update(score) {
+        if (score >= 300) {
+            this.isStopped = true;
+            this.x -= gameSpeed;
+        } else {
+            this.timer += 0.05;
+            // Slight variation in position as requested
+            this.x = this.baseX + Math.sin(this.timer) * 30;
+        }
+    }
+
+    reset() {
+        this.isStopped = false;
+        this.x = this.baseX;
+        this.timer = 0;
+    }
+}
+
 class LevelManager {
     constructor(gameWidth, gameHeight) {
         this.gameWidth = gameWidth;
@@ -396,6 +439,7 @@ const gameOverTitle = document.querySelector('#game-over-screen h1');
 const input = new InputHandler();
 const player = new Thor(GAME_WIDTH, GAME_HEIGHT);
 const levelManager = new LevelManager(GAME_WIDTH, GAME_HEIGHT);
+const loki = new Loki(GAME_WIDTH, GAME_HEIGHT);
 
 let gameRunning = false;
 let score = 0;
@@ -426,6 +470,7 @@ function startGame() {
     player.isAttacking = false;
 
     levelManager.reset();
+    loki.reset();
 
     if (startScreen) {
         startScreen.classList.add('hidden');
@@ -503,6 +548,17 @@ function checkCollisions() {
             scoreElement.innerText = score;
         }
     });
+
+    // Check collision with Loki at 300 points
+    if (score >= 300) {
+        const dx = (loki.x + loki.width / 2) - (player.x + player.width / 2);
+        const dy = (loki.y + loki.height / 2) - (player.y + player.height / 2);
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < loki.width / 2 + player.width / 2 - 20) {
+            winGame();
+        }
+    }
 }
 
 function update(deltaTime) {
@@ -511,6 +567,7 @@ function update(deltaTime) {
 
     player.update(input, levelManager.platforms);
     levelManager.update(deltaTime);
+    loki.update(score);
     checkCollisions();
 
     if (frameCount % 60 === 0) {
@@ -523,10 +580,6 @@ function update(deltaTime) {
         gameSpeed = gameSpeed * 1.1; // Increase by 10%
         nextSpeedThreshold += 100;
         console.log("Speed Up! New Speed:", gameSpeed);
-    }
-
-    if (score >= 300 && !gameWon) {
-        winGame();
     }
 }
 
@@ -561,6 +614,7 @@ function draw() {
     ctx.stroke();
 
     levelManager.draw(ctx);
+    loki.draw(ctx);
     player.draw(ctx);
 }
 
