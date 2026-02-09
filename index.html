@@ -16,10 +16,12 @@
             <div id="score-board">Puntos: <span id="score">0</span></div>
             
             <div id="start-screen" class="screen active">
-                <h1>THOR RUNNER</h1>
-                <p>Presiona ESPACIO o toca para saltar</p>
-                <p>Presiona Z o clic para atacar</p>
-                <button id="start-btn">JUGAR</button>
+                <div class="screen-content">
+                    <h1>THOR RUNNER</h1>
+                    <p>Presiona ESPACIO o toca para saltar</p>
+                    <p>Presiona Z o clic para atacar</p>
+                    <button id="start-btn">JUGAR</button>
+                </div>
                 <div class="control-buttons">
                     <button class="mute-btn" onclick="toggleMute()" aria-label="Mute">🔊</button>
                     <button class="fullscreen-btn" onclick="toggleFullScreen()" aria-label="Pantalla Completa">📺</button>
@@ -27,9 +29,11 @@
             </div>
 
             <div id="game-over-screen" class="screen hidden">
-                <h1>FIN DEL JUEGO</h1>
-                <p>Puntuación Final: <span id="final-score">0</span></p>
-                <button id="restart-btn">REINTENTAR</button>
+                <div class="screen-content">
+                    <h1>FIN DEL JUEGO</h1>
+                    <p>Puntuación Final: <span id="final-score">0</span></p>
+                    <button id="restart-btn">REINTENTAR</button>
+                </div>
                 <div class="control-buttons">
                     <button class="mute-btn" onclick="toggleMute()" aria-label="Mute">🔊</button>
                     <button class="fullscreen-btn" onclick="toggleFullScreen()" aria-label="Pantalla Completa">📺</button>

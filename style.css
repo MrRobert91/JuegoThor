@@ -56,13 +56,14 @@ canvas {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.8);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     pointer-events: auto;
     transition: opacity 0.3s;
+    z-index: 30; /* Por encima de los controles */
 }
 
 .screen.hidden {
@@ -76,15 +77,36 @@ canvas {
 }
 
 h1 {
-    font-size: 48px;
-    margin-bottom: 20px;
+    font-size: 30px; /* Reducido un poco más para que quepa mejor */
+    margin-bottom: 10px;
     color: #FFD700;
     text-shadow: 3px 3px 0 #b84f00;
+    line-height: 1.1;
 }
 
 p {
-    font-size: 18px;
-    margin-bottom: 10px;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.screen-content {
+    background: rgba(0, 0, 0, 0.9); /* Más opaco */
+    padding: 20px; /* Más compacto */
+    border: 3px solid #FFD700; /* Borde "bonito" */
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 95%; /* Más ancho en móviles */
+    max-height: 90%;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    overflow-y: auto;
+}
+
+@media (max-width: 600px) {
+    h1 { font-size: 24px; }
+    p { font-size: 12px; }
 }
 
 button {
@@ -127,13 +149,13 @@ button:active {
 /* Mobile Controls */
 #mobile-controls {
     position: absolute;
-    bottom: 30px;
+    bottom: 80px; /* Subidos 50px */
     width: 100%;
     display: flex;
     justify-content: space-between;
-    padding: 0 40px;
+    padding: 0 5px; /* Más hacia los bordes */
     pointer-events: none;
-    z-index: 20;
+    z-index: 5; /* Por debajo de las pantallas */
 }
 
 #mobile-controls button {
@@ -141,8 +163,8 @@ button:active {
     background: rgba(255, 255, 255, 0.2);
     border: 2px solid rgba(255, 255, 255, 0.4);
     border-radius: 50%;
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -167,8 +189,13 @@ button:active {
 }
 
 /* Show mobile controls only on touch devices */
-@media (pointer: coarse) {
+@media (pointer: coarse), (max-width: 1024px) {
     #mobile-controls {
         display: flex;
+    }
+
+    /* Ocultar controles cuando una pantalla está activa */
+    .screen.active ~ #mobile-controls {
+        display: none;
     }
 }
