@@ -637,9 +637,15 @@ function winGame() {
         lokiImg = document.createElement('img');
         lokiImg.id = 'loki-win-img';
         lokiImg.src = 'assets/loki.png';
-        lokiImg.style.maxWidth = '200px';
-        lokiImg.style.marginTop = '20px';
-        gameOverScreen.insertBefore(lokiImg, restartBtn);
+        lokiImg.style.maxHeight = '30%'; // Use percentage of screen height
+        lokiImg.style.maxWidth = '150px';
+        lokiImg.style.marginTop = '5px';
+        const content = gameOverScreen.querySelector('.screen-content');
+        if (content) {
+            content.insertBefore(lokiImg, restartBtn);
+        } else {
+            gameOverScreen.insertBefore(lokiImg, restartBtn);
+        }
     }
 
     if (gameOverScreen) {
