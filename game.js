@@ -20,8 +20,16 @@ let isPseudoFullScreen = false;
 const thorImage = new Image();
 thorImage.src = 'assets/thor.png';
 
-const enemyImage = new Image();
-enemyImage.src = 'assets/enemy.png';
+const enemyImage1 = new Image();
+enemyImage1.src = 'assets/enemy.png';
+
+const enemyImage2 = new Image();
+enemyImage2.src = 'assets/enemy2.png';
+
+const enemyImage3 = new Image();
+enemyImage3.src = 'assets/enemy3.png';
+
+const enemyImages = [enemyImage1, enemyImage2, enemyImage3];
 
 const lokiImage = new Image();
 lokiImage.src = 'assets/loki.png';
@@ -34,6 +42,15 @@ birdWhiteImage.src = 'assets/bird_white.png';
 
 const lokiCabrasImage = new Image();
 lokiCabrasImage.src = 'assets/loki_cabras.png';
+
+const bgMusic = new Audio('assets/cancion_thor.mp3');
+bgMusic.loop = true;
+
+const apoloImage = new Image();
+apoloImage.src = 'assets/apolo.png';
+
+const artemisaImage = new Image();
+artemisaImage.src = 'assets/artemisa.png';
 
 // --- CLASSES ---
 
@@ -167,19 +184,44 @@ class Thor {
 }
 
 class Enemy {
-    constructor(gameWidth, gameHeight) {
+    constructor(gameWidth, gameHeight, y = null, forcedIndex = null) {
         this.gameWidth = gameWidth;
         this.gameHeight = gameHeight;
-        this.width = 120;
-        this.height = 120;
-        this.x = this.gameWidth;
-        this.y = this.gameHeight - this.height - 50;
         this.markedForDeletion = false;
+
+        // Randomly select an image or use forced index
+        let index;
+        if (forcedIndex !== null) {
+            index = forcedIndex;
+        } else {
+            // Pick randomly between enemy.png (0) and enemy2.png (1) ONLY for ground/random spawn
+            index = Math.floor(Math.random() * 2);
+        }
+        this.image = enemyImages[index];
+
+        // Specific sizes and collision padding for different enemy types
+        // enemy.png (index 0), enemy2.png (index 1), enemy3.png (index 2)
+        if (index === 1) { // enemy2.png (rotated monster)
+            this.width = 150;
+            this.height = 90;
+            this.collisionPadding = 20;
+        } else if (index === 2) { // enemy3.png
+            this.width = 110;
+            this.height = 110;
+            this.collisionPadding = 30;
+        } else { // enemy.png
+            this.width = 120;
+            this.height = 120;
+            this.collisionPadding = 35;
+        }
+
+        this.x = this.gameWidth;
+        this.y = (y !== null) ? y : this.gameHeight - this.height - 50;
     }
 
     draw(context) {
-        if (enemyImage.complete && enemyImage.naturalWidth > 0) {
-            context.drawImage(enemyImage, this.x, this.y, this.width, this.height);
+        if (this.image.complete && this.image.naturalWidth > 0) {
+            context.drawImage(this.image, this.x, this.y, this.width, this.height);
         } else {
             context.fillStyle = 'purple';
             context.fillRect(this.x, this.y, this.width, this.height);
@@ -315,7 +357,7 @@ class Loki {
     }
 
     update(score) {
-        if (score >= 300) {
+        if (score >= 500) {
             this.isStopped = true;
             this.x -= gameSpeed;
         } else {
@@ -329,6 +371,55 @@ class Loki {
         this.isStopped = false;
         this.x = this.baseX;
         this.timer = 0;
+    }
+}
+
+class CelestialDeity {
+    constructor(isApolo) {
+        this.isApolo = isApolo;
+        this.width = 60;
+        this.height = 60;
+        this.angle = 0;
+        this.orbitRadius = 70;
+        this.visible = false;
+        this.visibilityTimer = 0;
+        this.image = isApolo ? apoloImage : artemisaImage;
+    }
+
+    update(score, isNight) {
+        // Trigger visibility when it turns day/night
+        const dayBoundaries = [0, 400];
+        const nightBoundaries = [200];
+
+        if (this.isApolo && !isNight && dayBoundaries.includes(score)) {
+            if (!this.visible) this.show();
+        } else if (!this.isApolo && isNight && nightBoundaries.includes(score)) {
+            if (!this.visible) this.show();
+        }
+
+        if (this.visible) {
+            this.angle += 0.05;
+            this.visibilityTimer--;
+            if (this.visibilityTimer <= 0) {
+                this.visible = false;
+            }
+        }
+    }
+
+    show() {
+        this.visible = true;
+        this.visibilityTimer = 300; // Visible for ~5 seconds at 60fps
+    }
+
+    draw(context, centerX, centerY) {
+        if (!this.visible) return;
+
+        const x = centerX + Math.cos(this.angle) * this.orbitRadius - this.width / 2;
+        const y = centerY + Math.sin(this.angle) * this.orbitRadius - this.height / 2;
+
+        if (this.image.complete && this.image.naturalWidth > 0) {
+            context.drawImage(this.image, x, y, this.width, this.height);
+        }
     }
 }
 
@@ -399,6 +490,13 @@ class LevelManager {
             const pHeight = this.gameHeight - 150;
             const platform = new Platform(this.gameWidth, this.gameHeight, this.gameWidth, pHeight, pWidth);
             this.platforms.push(platform);
+
+            // Add enemy3 specifically on top of platforms
+            if (Math.random() > 0.4) {
+                const enemy3 = new Enemy(this.gameWidth, this.gameHeight, pHeight - 110, 2);
+                this.enemies.push(enemy3);
+            }
+
             this.coins.push(new Coin(this.gameWidth, this.gameHeight, pHeight - 50));
             if (Math.random() > 0.5) this.coins.push(new Coin(this.gameWidth + 50, this.gameHeight, this.gameHeight - 100));
         } else if (rand < 0.8) {
@@ -408,6 +506,14 @@ class LevelManager {
             const pWidth = 120;
             const pHeight = this.gameHeight - 200;
             this.platforms.push(new Platform(this.gameWidth, this.gameHeight, this.gameWidth, pHeight, pWidth));
+
+            // Add enemy3 specifically on top of platforms
+            if (Math.random() > 0.5) {
+                const enemy3 = new Enemy(this.gameWidth, this.gameHeight, pHeight - 110, 2);
+                enemy3.x += 30;
+                this.enemies.push(enemy3);
+            }
+
             this.coins.push(new Coin(this.gameWidth + 30, this.gameHeight, pHeight - 40));
         } else {
             this.coins.push(new Coin(this.gameWidth, this.gameHeight, this.gameHeight - 120));
@@ -446,6 +552,8 @@ const input = new InputHandler();
 const player = new Thor(GAME_WIDTH, GAME_HEIGHT);
 const levelManager = new LevelManager(GAME_WIDTH, GAME_HEIGHT);
 const loki = new Loki(GAME_WIDTH, GAME_HEIGHT);
+const apolo = new CelestialDeity(true);
+const artemisa = new CelestialDeity(false);
 
 let gameRunning = false;
 let score = 0;
@@ -453,6 +561,7 @@ let frameCount = 0;
 let lastTime = 0;
 let gameWon = false;
 let nextSpeedThreshold = 100;
+let canRestart = true;
 
 // Event Listeners
 if (startBtn) startBtn.addEventListener('click', startGame);
@@ -460,6 +569,8 @@ if (restartBtn) restartBtn.addEventListener('click', startGame);
 
 function startGame() {
     console.log("Starting Game...");
+    if (!canRestart) return;
+    bgMusic.play().catch(e => console.log("Audio play failed:", e));
     if (gameRunning) return;
 
     gameRunning = true;
@@ -498,13 +609,22 @@ function startGame() {
 }
 
 function gameOver() {
+    if (!gameRunning) return;
     gameRunning = false;
+    canRestart = false;
+
     if (finalScoreElement) finalScoreElement.innerText = score;
-    if (gameOverTitle) gameOverTitle.innerText = "FIN DEL JUEGO";
+    if (gameOverTitle) gameOverTitle.innerText = "Has fracasado en tu misión de recuperar las cabras";
+
     if (gameOverScreen) {
         gameOverScreen.classList.remove('hidden');
         gameOverScreen.classList.add('active');
     }
+
+    // Delay restart capability to prevent accidental clicks
+    setTimeout(() => {
+        canRestart = true;
+    }, 500);
 }
 
 function winGame() {
@@ -536,7 +656,7 @@ function checkCollisions() {
         const dy = (enemy.y + enemy.height / 2) - (player.y + player.height / 2);
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance < enemy.width / 2 + player.width / 2 - 15) {
+        if (distance < enemy.width / 2 + player.width / 2 - enemy.collisionPadding) {
             if (player.isAttacking) {
                 enemy.markedForDeletion = true;
                 score += 10;
@@ -559,8 +679,8 @@ function checkCollisions() {
         }
     });
 
-    // Check collision with Loki at 300 points
-    if (score >= 300) {
+    // Check collision with Loki at 500 points
+    if (score >= 500) {
         const dx = (loki.x + loki.width / 2) - (player.x + player.width / 2);
         const dy = (loki.y + loki.height / 2) - (player.y + player.height / 2);
         const distance = Math.sqrt(dx * dx + dy * dy);
@@ -578,6 +698,12 @@ function update(deltaTime) {
     player.update(input, levelManager.platforms);
     levelManager.update(deltaTime);
     loki.update(score);
+
+    // Deities update
+    let isNight = score >= 200 && score < 400;
+    apolo.update(score, isNight);
+    artemisa.update(score, isNight);
+
     checkCollisions();
 
     if (frameCount % 60 === 0) {
@@ -585,26 +711,46 @@ function update(deltaTime) {
         scoreElement.innerText = score;
     }
 
-    // Speed Scaling
+    // Speed Scaling - Stabilized check
     if (score >= nextSpeedThreshold) {
-        gameSpeed = gameSpeed * 1.1; // Increase by 10%
-        nextSpeedThreshold += 100;
-        console.log("Speed Up! New Speed:", gameSpeed);
+        gameSpeed = Math.min(gameSpeed * 1.1, 12); // Max speed limit added
+        nextSpeedThreshold = Math.floor(score / 100) * 100 + 100;
+        console.log("Speed Up! New Speed:", gameSpeed, "Next at:", nextSpeedThreshold);
     }
 }
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Day/Night Cycle
+    let isNight = score >= 200 && score < 400;
+
     // Sky
-    ctx.fillStyle = '#87CEEB';
+    ctx.fillStyle = isNight ? '#2c3e50' : '#87CEEB';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Sun
-    ctx.fillStyle = '#FDB813';
-    ctx.beginPath();
-    ctx.arc(GAME_WIDTH - 80, 80, 40, 0, Math.PI * 2);
-    ctx.fill();
+    if (isNight) {
+        // Moon
+        ctx.fillStyle = '#ecf0f1';
+        ctx.beginPath();
+        ctx.arc(80, 80, 40, 0, Math.PI * 2);
+        ctx.fill();
+        // Moon shadow to make it a crescent
+        ctx.fillStyle = '#2c3e50';
+        ctx.beginPath();
+        ctx.arc(100, 70, 35, 0, Math.PI * 2);
+        ctx.fill();
+
+        artemisa.draw(ctx, 80, 80);
+    } else {
+        // Sun
+        ctx.fillStyle = '#FDB813';
+        ctx.beginPath();
+        ctx.arc(GAME_WIDTH - 80, 80, 40, 0, Math.PI * 2);
+        ctx.fill();
+
+        apolo.draw(ctx, GAME_WIDTH - 80, 80);
+    }
 
     // Ground
     ctx.fillStyle = '#5D4037';
