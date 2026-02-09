@@ -28,10 +28,18 @@
                 <button id="restart-btn">REINTENTAR</button>
             </div>
             
-            <!-- Mobile Controls (Visible only on small screens via CSS media queries if needed, or always visible) -->
+            <!-- Mobile Controls -->
             <div id="mobile-controls">
-                <button id="jump-btn">SALTAR</button>
-                <button id="attack-btn">ATACAR</button>
+                <button id="attack-btn" aria-label="Atacar">
+                    <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor">
+                        <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
+                    </svg>
+                </button>
+                <button id="jump-btn" aria-label="Saltar">
+                    <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor">
+                        <path d="M12 4l-8 8h5v8h6v-8h5z"/>
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
