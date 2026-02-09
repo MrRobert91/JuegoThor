@@ -11,7 +11,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    height: 100dvh;
     margin: 0;
     overflow: hidden;
 }
@@ -20,8 +20,7 @@ body {
     position: relative;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     background-color: #87CEEB;
-    width: 100%;
-    max-width: 177.78vh; /* 16/9 aspect ratio */
+    width: min(100vw, 177.78dvh);
     aspect-ratio: 16 / 9;
 }
 
@@ -103,6 +102,25 @@ button {
 
 button:active {
     transform: translateY(4px);
+    box-shadow: none;
+}
+
+.control-buttons {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.control-buttons button {
+    margin-top: 0;
+    padding: 5px;
+    font-size: 20px;
+    width: 45px;
+    height: 45px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     box-shadow: none;
 }
 

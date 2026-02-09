@@ -10,6 +10,12 @@ const INITIAL_GAME_SPEED = 4.5;
 
 let gameSpeed = INITIAL_GAME_SPEED;
 
+// Audio
+const bgMusic = new Audio('assets/cancion_thor.mp3');
+bgMusic.loop = true;
+let isMuted = false;
+let isPseudoFullScreen = false;
+
 // Assets
 const thorImage = new Image();
 thorImage.src = 'assets/thor.png';
@@ -483,6 +489,10 @@ function startGame() {
 
     if (gameOverTitle) gameOverTitle.innerText = "FIN DEL JUEGO";
 
+    if (!isMuted) {
+        bgMusic.play().catch(e => console.log("Audio play blocked:", e));
+    }
+
     lastTime = performance.now();
     requestAnimationFrame(animate);
 }
@@ -627,6 +637,71 @@ function animate(currentTime) {
     draw();
 
     requestAnimationFrame(animate);
+}
+
+// Audio Control Functions
+function toggleMute() {
+    isMuted = !isMuted;
+    bgMusic.muted = isMuted;
+
+    if (!isMuted && bgMusic.paused) {
+        bgMusic.play().catch(e => console.log("Audio play blocked:", e));
+    }
+
+    const muteBtns = document.querySelectorAll('.mute-btn');
+    muteBtns.forEach(btn => {
+        btn.innerText = isMuted ? "🔇" : "🔊";
+    });
+}
+
+function toggleFullScreen() {
+    const container = document.getElementById('game-container');
+
+    if (!document.fullscreenElement &&
+        !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement && !isPseudoFullScreen) {
+
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        } else if (document.documentElement.msRequestFullscreen) {
+            document.documentElement.msRequestFullscreen();
+        } else if (document.documentElement.mozRequestFullScreen) {
+            document.documentElement.mozRequestFullScreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+            document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+        } else {
+            // iOS/Safari stretch fallback
+            if (container) {
+                container.style.width = '100vw';
+                container.style.height = '100dvh';
+                container.style.position = 'fixed';
+                container.style.top = '0';
+                container.style.left = '0';
+                container.style.zIndex = '9999';
+                isPseudoFullScreen = true;
+            }
+        }
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        }
+
+        // Reset pseudo fullscreen
+        if (isPseudoFullScreen && container) {
+            container.style.width = '';
+            container.style.height = '';
+            container.style.position = '';
+            container.style.top = '';
+            container.style.left = '';
+            container.style.zIndex = '';
+            isPseudoFullScreen = false;
+        }
+    }
 }
 
 // Initial Draw
