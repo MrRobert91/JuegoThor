@@ -43,8 +43,6 @@ birdWhiteImage.src = 'assets/bird_white.png';
 const lokiCabrasImage = new Image();
 lokiCabrasImage.src = 'assets/loki_cabras.png';
 
-const bgMusic = new Audio('assets/cancion_thor.mp3');
-bgMusic.loop = true;
 
 const apoloImage = new Image();
 apoloImage.src = 'assets/apolo.png';
