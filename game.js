@@ -20,6 +20,7 @@ let isPseudoFullScreen = false;
 const thorImage = new Image();
 thorImage.src = 'assets/thor.png';
 
+
 const enemyImage1 = new Image();
 enemyImage1.src = 'assets/enemy.png';
 
@@ -541,6 +542,8 @@ canvas.height = GAME_HEIGHT;
 const scoreElement = document.getElementById('score');
 const finalScoreElement = document.getElementById('final-score');
 const startScreen = document.getElementById('start-screen');
+const introScreen = document.getElementById('intro-screen');
+const introVideo = document.getElementById('intro-video');
 const gameOverScreen = document.getElementById('game-over-screen');
 const startBtn = document.getElementById('start-btn');
 const restartBtn = document.getElementById('restart-btn');
@@ -560,14 +563,71 @@ let lastTime = 0;
 let gameWon = false;
 let nextSpeedThreshold = 100;
 let canRestart = true;
+let hasPlayedIntro = false;
+let isIntroPlaying = false;
 
 // Event Listeners
-if (startBtn) startBtn.addEventListener('click', startGame);
+if (startBtn) startBtn.addEventListener('click', handleStartButtonClick);
 if (restartBtn) restartBtn.addEventListener('click', startGame);
+
+if (introVideo) {
+    introVideo.addEventListener('ended', finishIntroAndStartGame);
+    introVideo.addEventListener('error', finishIntroAndStartGame);
+}
+
+function handleStartButtonClick() {
+    if (hasPlayedIntro) {
+        startGame();
+        return;
+    }
+
+    playIntroAndStartGame();
+}
+
+function playIntroAndStartGame() {
+    if (!introVideo || !introScreen || isIntroPlaying) {
+        finishIntroAndStartGame();
+        return;
+    }
+
+    isIntroPlaying = true;
+
+    if (startScreen) {
+        startScreen.classList.add('hidden');
+        startScreen.classList.remove('active');
+    }
+
+    introScreen.classList.remove('hidden');
+    introScreen.classList.add('active');
+    introVideo.currentTime = 0;
+
+    const playPromise = introVideo.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(() => {
+            finishIntroAndStartGame();
+        });
+    }
+}
+
+function finishIntroAndStartGame() {
+    if (introVideo) {
+        introVideo.pause();
+        introVideo.currentTime = 0;
+    }
+
+    if (introScreen) {
+        introScreen.classList.add('hidden');
+        introScreen.classList.remove('active');
+    }
+
+    hasPlayedIntro = true;
+    isIntroPlaying = false;
+    startGame();
+}
 
 function startGame() {
     console.log("Starting Game...");
-    if (!canRestart) return;
+    if (!canRestart || isIntroPlaying) return;
     bgMusic.play().catch(e => console.log("Audio play failed:", e));
     if (gameRunning) return;
 
@@ -590,6 +650,10 @@ function startGame() {
     if (startScreen) {
         startScreen.classList.add('hidden');
         startScreen.classList.remove('active');
+    }
+    if (introScreen) {
+        introScreen.classList.add('hidden');
+        introScreen.classList.remove('active');
     }
     if (gameOverScreen) {
         gameOverScreen.classList.add('hidden');
