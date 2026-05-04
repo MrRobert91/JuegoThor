@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thor Endless Runner</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- UI Overlay -->
+        <div id="ui-layer">
+            <div id="score-board">Puntos: <span id="score">0</span></div>
+            
+            <div id="start-screen" class="screen active">
+                <div class="screen-content">
+                    <h1>THOR RUNNER</h1>
+                    <p>Presiona ESPACIO o toca para saltar</p>
+                    <p>Presiona Z o clic para atacar</p>
+                    <button id="start-btn">JUGAR</button>
+                </div>
+                <div class="control-buttons">
+                    <button class="mute-btn" onclick="toggleMute()" aria-label="Mute">🔊</button>
+                    <button class="fullscreen-btn" onclick="toggleFullScreen()" aria-label="Pantalla Completa">📺</button>
+                </div>
+            </div>
+
+            <div id="intro-screen" class="screen hidden">
+                <div class="screen-content intro-content">
+                    <h1>THOR RUNNER</h1>
+                    <div class="intro-video-frame">
+                        <video id="intro-video" preload="auto" playsinline>
+                            <source src="assets/intro.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <p>Presentación inicial</p>
+                </div>
+                <div class="control-buttons">
+                    <button class="mute-btn" onclick="toggleMute()" aria-label="Mute">🔊</button>
+                    <button class="fullscreen-btn" onclick="toggleFullScreen()" aria-label="Pantalla Completa">📺</button>
+                </div>
+            </div>
+
+            <div id="game-over-screen" class="screen hidden">
+                <div class="screen-content">
+                    <h1>FIN DEL JUEGO</h1>
+                    <p>Puntuación Final: <span id="final-score">0</span></p>
+                    <button id="restart-btn">REINTENTAR</button>
+                </div>
+                <div class="control-buttons">
+                    <button class="mute-btn" onclick="toggleMute()" aria-label="Mute">🔊</button>
+                    <button class="fullscreen-btn" onclick="toggleFullScreen()" aria-label="Pantalla Completa">📺</button>
+                </div>
+            </div>
+            
+            <!-- Mobile Controls -->
+            <div id="mobile-controls">
+                <button id="attack-btn" aria-label="Atacar">
+                    <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor">
+                        <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
+                    </svg>
+                </button>
+                <button id="jump-btn" aria-label="Saltar">
+                    <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor">
+                        <path d="M12 4l-8 8h5v8h6v-8h5z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
