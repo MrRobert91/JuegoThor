@@ -1,0 +1,230 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #000;
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100dvh;
+    margin: 0;
+    overflow: hidden;
+}
+
+#game-container {
+    position: relative;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    background-color: #87CEEB;
+    width: min(100vw, 177.78dvh);
+    aspect-ratio: 16 / 9;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+#score-board {
+    position: absolute;
+    top: 10px;
+    left: 20px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    pointer-events: auto;
+    transition: opacity 0.3s;
+    z-index: 30; /* Por encima de los controles */
+}
+
+.screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.screen.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#intro-screen {
+    background: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+}
+
+.intro-content {
+    width: min(88%, 720px);
+    gap: 14px;
+}
+
+.intro-video-frame {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 3px solid rgba(255, 215, 0, 0.65);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 18px rgba(255, 215, 0, 0.25);
+    background: #000;
+}
+
+#intro-video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+}
+
+h1 {
+    font-size: 30px; /* Reducido un poco más para que quepa mejor */
+    margin-bottom: 10px;
+    color: #FFD700;
+    text-shadow: 3px 3px 0 #b84f00;
+    line-height: 1.1;
+}
+
+p {
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.screen-content {
+    background: rgba(0, 0, 0, 0.9); /* Más opaco */
+    padding: 20px; /* Más compacto */
+    border: 3px solid #FFD700; /* Borde "bonito" */
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 95%; /* Más ancho en móviles */
+    max-height: 90%;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    overflow-y: auto;
+}
+
+@media (max-width: 600px) {
+    h1 { font-size: 24px; }
+    p { font-size: 12px; }
+}
+
+button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 24px;
+    background: #ff4500;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    box-shadow: 0 4px 0 #b33000;
+    font-family: inherit;
+}
+
+button:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+.control-buttons {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 10px;
+}
+
+.control-buttons button {
+    margin-top: 0;
+    padding: 5px;
+    font-size: 20px;
+    width: 45px;
+    height: 45px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: none;
+}
+
+/* Mobile Controls */
+#mobile-controls {
+    position: absolute;
+    bottom: 80px; /* Subidos 50px */
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 5px; /* Más hacia los bordes */
+    pointer-events: none;
+    z-index: 5; /* Por debajo de las pantallas */
+}
+
+#mobile-controls button {
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transition: background 0.2s, transform 0.1s;
+    outline: none;
+}
+
+#mobile-controls button:active {
+    background: rgba(255, 255, 255, 0.5);
+    transform: scale(0.9);
+}
+
+#mobile-controls button svg {
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
+}
+
+#mobile-controls {
+    display: none;
+}
+
+/* Show mobile controls only on touch devices */
+@media (pointer: coarse), (max-width: 1024px) {
+    #mobile-controls {
+        display: flex;
+    }
+
+    /* Ocultar controles cuando una pantalla está activa */
+    .screen.active ~ #mobile-controls {
+        display: none;
+    }
+}
