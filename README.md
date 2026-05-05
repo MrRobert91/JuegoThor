@@ -26,7 +26,7 @@ They are deeply fascinated by Nordic mythology, largely thanks to the Spanish Yo
 
 - **Intro Video**: The cinematic intro was created using **Veo3**, Google's AI video generation tool.
 
-- **The Code**: The game itself was programmed using **VS Code** with **GitHub Copilot** and **Claude Code**. Nearly everything was voice-coded — commands were dictated to the AI using **[Wispr Flow](https://wisprflow.ai)**, a voice-to-text tool that makes talking to LLMs feel natural and fast.
+- **The Code**: The game itself was programmed using **VS Code** with **GitHub Copilot** and **Claude Code**. Nearly everything was voice-coded — commands were dictated to the AI using **[Wispr Flow](https://wisprflow.ai/r?DAVID38580)**, a voice-to-text tool that makes talking to LLMs feel natural and fast. Try it with my referral link and get a **free month of Pro**: [wisprflow.ai/r?DAVID38580](https://wisprflow.ai/r?DAVID38580)
 
 The result is a fully playable browser game built through the combined creativity of a dad, two five-year-olds, and a handful of AI tools — proof that you don't need a big studio to make something fun.
 
