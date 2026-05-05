@@ -570,18 +570,53 @@ let isIntroPlaying = false;
 if (startBtn) startBtn.addEventListener('click', handleStartButtonClick);
 if (restartBtn) restartBtn.addEventListener('click', startGame);
 
+// Pre-load logic to ensure assets are ready
+function checkAssetsLoaded() {
+    const images = [
+        thorImage, enemyImage1, enemyImage2, enemyImage3, 
+        lokiImage, birdBlueImage, birdWhiteImage, 
+        lokiCabrasImage, apoloImage, artemisaImage
+    ];
+    return images.every(img => img.complete && img.naturalWidth > 0);
+}
+
 if (introVideo) {
     introVideo.addEventListener('ended', finishIntroAndStartGame);
-    introVideo.addEventListener('error', finishIntroAndStartGame);
+    introVideo.addEventListener('error', (e) => {
+        console.error("Video error:", e);
+        finishIntroAndStartGame();
+    });
+    // Forzamos carga
+    introVideo.load();
 }
 
 function handleStartButtonClick() {
+    // Intentar reproducir música aquí también para ganar permisos de audio
+    bgMusic.play().then(() => {
+        if (isMuted) bgMusic.pause();
+    }).catch(e => console.log("Initial audio interaction failed:", e));
+
     if (hasPlayedIntro) {
         startGame();
         return;
     }
 
     playIntroAndStartGame();
+}
+
+/**
+ * SALTO DE VIDEO (OPCIONAL)
+ * Si el usuario pulsa espacio, Z o clic durante el vídeo, saltamos al juego.
+ */
+document.addEventListener('keydown', (e) => {
+    if (isIntroPlaying && (e.code === 'Space' || e.code === 'KeyZ')) {
+        finishIntroAndStartGame();
+    }
+});
+if (introScreen) {
+    introScreen.addEventListener('click', () => {
+        if (isIntroPlaying) finishIntroAndStartGame();
+    });
 }
 
 function playIntroAndStartGame() {
@@ -599,14 +634,28 @@ function playIntroAndStartGame() {
 
     introScreen.classList.remove('hidden');
     introScreen.classList.add('active');
+    
+    // Configuración para máxima compatibilidad
+    introVideo.muted = true; 
     introVideo.currentTime = 0;
 
     const playPromise = introVideo.play();
-    if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(() => {
+    if (playPromise !== undefined) {
+        playPromise.then(() => {
+            console.log("Video started successfully");
+        }).catch((error) => {
+            console.warn("Video auto-play failed, calling finish:", error);
             finishIntroAndStartGame();
         });
     }
+
+    // Si por alguna razón el vídeo no carga o no empieza tras un tiempo, saltamos
+    setTimeout(() => {
+        if (isIntroPlaying && (introVideo.paused || introVideo.readyState < 2)) {
+            console.log("Video stuck or not ready, skipping...");
+            finishIntroAndStartGame();
+        }
+    }, 2000); 
 }
 
 function finishIntroAndStartGame() {

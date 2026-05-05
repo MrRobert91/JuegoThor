@@ -13,6 +13,7 @@ let gameSpeed = INITIAL_GAME_SPEED;
 // Audio
 const bgMusic = new Audio('assets/cancion_thor.mp3');
 bgMusic.loop = true;
+bgMusic.preload = 'auto'; // Explicit preload
 let isMuted = false;
 let isPseudoFullScreen = false;
 
@@ -50,6 +51,16 @@ apoloImage.src = 'assets/apolo.png';
 
 const artemisaImage = new Image();
 artemisaImage.src = 'assets/artemisa.png';
+
+// Manually trigger load for each image to be safer on some browsers
+[thorImage, enemyImage1, enemyImage2, enemyImage3, lokiImage, 
+ birdBlueImage, birdWhiteImage, lokiCabrasImage, apoloImage, artemisaImage].forEach(img => {
+    if (img.src) {
+        const src = img.src;
+        img.src = '';
+        img.src = src;
+    }
+});
 
 // --- CLASSES ---
 
@@ -570,18 +581,65 @@ let isIntroPlaying = false;
 if (startBtn) startBtn.addEventListener('click', handleStartButtonClick);
 if (restartBtn) restartBtn.addEventListener('click', startGame);
 
+// Pre-load logic to ensure assets are ready
+function checkAssetsLoaded() {
+    const images = [
+        thorImage, enemyImage1, enemyImage2, enemyImage3, 
+        lokiImage, birdBlueImage, birdWhiteImage, 
+        lokiCabrasImage, apoloImage, artemisaImage
+    ];
+    return images.every(img => img.complete && img.naturalWidth > 0);
+}
+
+// Function to get correct path for Itch.io
+function getAssetPath(path) {
+    // Itch.io sometimes has issues with leading slashes or specific relative paths in nested folders
+    // We ensure the path is strictly relative from the index.html location
+    return path.replace(/^\/+/, '');
+}
+
 if (introVideo) {
     introVideo.addEventListener('ended', finishIntroAndStartGame);
-    introVideo.addEventListener('error', finishIntroAndStartGame);
+    introVideo.addEventListener('error', (e) => {
+        console.error("Video error:", e);
+        finishIntroAndStartGame();
+    });
+    // Forzamos carga
+    introVideo.load();
 }
 
 function handleStartButtonClick() {
+    // Asegurarnos de que el video intente cargarse antes incluso de darle a jugar
+    if (introVideo) {
+        introVideo.load();
+    }
+    
+    // Intentar reproducir música aquí también para ganar permisos de audio
+    bgMusic.play().then(() => {
+        if (isMuted) bgMusic.pause();
+    }).catch(e => console.log("Initial audio interaction failed:", e));
+
     if (hasPlayedIntro) {
         startGame();
         return;
     }
 
     playIntroAndStartGame();
+}
+
+/**
+ * SALTO DE VIDEO (OPCIONAL)
+ * Si el usuario pulsa espacio, Z o clic durante el vídeo, saltamos al juego.
+ */
+document.addEventListener('keydown', (e) => {
+    if (isIntroPlaying && (e.code === 'Space' || e.code === 'KeyZ')) {
+        finishIntroAndStartGame();
+    }
+});
+if (introScreen) {
+    introScreen.addEventListener('click', () => {
+        if (isIntroPlaying) finishIntroAndStartGame();
+    });
 }
 
 function playIntroAndStartGame() {
@@ -599,14 +657,28 @@ function playIntroAndStartGame() {
 
     introScreen.classList.remove('hidden');
     introScreen.classList.add('active');
+    
+    // Configuración para máxima compatibilidad
+    introVideo.muted = true; 
     introVideo.currentTime = 0;
 
     const playPromise = introVideo.play();
-    if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(() => {
+    if (playPromise !== undefined) {
+        playPromise.then(() => {
+            console.log("Video started successfully");
+        }).catch((error) => {
+            console.warn("Video auto-play failed, calling finish:", error);
             finishIntroAndStartGame();
         });
     }
+
+    // Si por alguna razón el vídeo no carga o no empieza tras un tiempo, saltamos
+    setTimeout(() => {
+        if (isIntroPlaying && (introVideo.paused || introVideo.readyState < 2)) {
+            console.log("Video stuck or not ready, skipping...");
+            finishIntroAndStartGame();
+        }
+    }, 2000); 
 }
 
 function finishIntroAndStartGame() {
