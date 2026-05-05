@@ -51,8 +51,8 @@ These are the hand-drawn sketches and colorings made by the kids that were used 
 
 | | | |
 |:---:|:---:|:---:|
-| ![Thor & Loki](original_draws/thor_loki.jpeg) | ![Loki](original_draws/loki-removebg-preview.png) | ![Artemisa](original_draws/artemisa_angel.jpeg) |
-| Thor & Loki sketch | Loki | Artemisa |
+| ![Thor & Loki](original_draws/thor_loki.jpeg) | ![Apolo](original_draws/apolo.jpeg) | ![Artemisa](original_draws/artemisa_angel.jpeg) |
+| Thor & Loki sketch | Apolo | Artemisa |
 | ![Enemy 1](original_draws/enemy1.jpeg) | ![Enemy 2](original_draws/enemy2.jpeg) | ![Enemy 3](original_draws/enemy3.jpeg) |
 | Enemy 1 | Enemy 2 | Enemy 3 |
 | ![Blue Bird](original_draws/pajaro%20azul.jpeg) | ![White Bird](original_draws/pajaroBlanco.jpeg) | ![Goats](original_draws/cabras-azul-y-roja.jpeg) |
